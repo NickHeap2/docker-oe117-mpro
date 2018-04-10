@@ -4,13 +4,16 @@ set -e
 
 signal_handler() {
 
-    echo "Stopping container"
-
+    echo "Stopping mpro session..."
+    if [ ! -z "${pid}" ]
+    then
+      kill ${pid}
+    fi
     # graceful shutdown so exit with 0
     exit 0
 }
 # trap SIGTERM and call the handler to cleanup processes
-trap 'kill ${!}; signal_handler' SIGTERM SIGINT
+trap 'signal_handler' SIGTERM SIGINT
 
 # most servers use a lock file so clear it up now if needed
 if [ ! -z "${LOCK_FILE}" ]
