@@ -48,7 +48,8 @@ ENV \
  PROPATH="/var/lib/openedge/base/:/var/lib/openedge/code/" \
  LOGGING_LEVEL="2" \
  LOG_ENTRY_TYPES="DB.Connects,4GLMessages" \
- LOCK_FILE=""
+ LOCK_FILE="" \
+ LOG_FILE_NAME="mpro"
 
 # volume for application code
 VOLUME /var/lib/openedge/code/
