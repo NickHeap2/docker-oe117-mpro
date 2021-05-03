@@ -7,6 +7,20 @@ COPY conf/response.ini /install/openedge/
 #do a background progress install with our response.ini
 RUN /install/openedge/proinst -b /install/openedge/response.ini -l silentinstall.log
 
+# gcc-c++ for build
+RUN yum install -y gcc-c++ && \
+    yum clean all && \
+    rm -rf /var/cache/yum
+
+# build the 4gl client
+WORKDIR /usr/dlc/oebuild/make
+ENV DLC=/usr/dlc
+RUN ./build_rx.sh
+
+# replace the 4gl client and remove the license file
+RUN cp /usr/dlc/oebuild/_progres /usr/dlc/bin/ && \
+    rm /usr/dlc/progress.cfg
+
 ###############################################
 
 # actual mpro server image
@@ -18,7 +32,7 @@ LABEL maintainer="Nick Heap (nickheap@gmail.com)" \
  oeversion="11.7.2"
 
 # Add Tini
-ENV TINI_VERSION v0.17.0
+ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
@@ -45,18 +59,33 @@ ENV \
  WRKDIR="/usr/wrk" \
  PROCFG="" \
  MPRO_STARTUP=" -b -p server.p" \
- PROPATH="/var/lib/openedge/base/:/var/lib/openedge/code/" \
+ PROPATH="/var/lib/openedge/code/:/var/lib/openedge/base/" \
  LOGGING_LEVEL="2" \
  LOG_ENTRY_TYPES="DB.Connects,4GLMessages" \
  LOCK_FILE="" \
- LOG_FILE_NAME="mpro"
+ LOG_FILE_NAME="mpro" \
+ display_banner=no
 
 # volume for application code
-VOLUME /var/lib/openedge/code/
-VOLUME /usr/wrk/
+#VOLUME /var/lib/openedge/code/
+#VOLUME /usr/wrk/
 
 #EXPOSE
 
 # Run start.sh under Tini
 CMD ["/var/lib/openedge/start.sh"]
 
+RUN mkdir /usr/wrk/
+
+RUN adduser -G root openedge
+
+RUN chmod -R 775 /usr/wrk/
+RUN chown -R openedge:root /usr/wrk/
+
+RUN chmod -R 775 /var/lib/openedge/code/
+RUN chown -R openedge:root /var/lib/openedge/code/
+
+# allow progress exe to access environment variables
+RUN chmod 755 /usr/dlc/bin/_progres
+
+USER 1000

@@ -1,3 +1,4 @@
-/*
-!/**/*
-.*/*
+*
+!scripts/*
+!base/*
+!conf/response.ini
